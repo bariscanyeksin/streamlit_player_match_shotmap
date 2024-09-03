@@ -51,8 +51,8 @@ st.markdown(
         /* Bilgisayarlar için */
         @media (min-width: 1024px) {
             .block-container {
-                width: 800px;
-                max-width: 800px;
+                width: 7500px;
+                max-width: 750px;
                 padding-top: 0px;
             }
         }
