@@ -112,16 +112,6 @@ image_html = f"""
 
 st.sidebar.markdown(image_html, unsafe_allow_html=True)
 
-# CSS ile fullscreen butonunu gizleme
-hide_fullscreen_button = """
-    <style>
-    button[title="View fullscreen"] {
-        display: none;
-    }
-    </style>
-    """
-st.sidebar.markdown(hide_fullscreen_button, unsafe_allow_html=True)
-
 plt.rcParams['figure.dpi'] = 300
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
