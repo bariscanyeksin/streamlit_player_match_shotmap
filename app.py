@@ -373,7 +373,7 @@ table_data = [
     for shot in player_shots
 ]
 
-st.write(player_shots)
+st.write(table_data)
 
 # DataFrame oluşturma
 df_shots = pd.DataFrame(table_data)
