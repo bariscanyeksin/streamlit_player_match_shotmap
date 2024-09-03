@@ -373,13 +373,11 @@ table_data = [
     for shot in player_shots
 ]
 
-st.write(table_data)
-
 # DataFrame oluşturma
 df_shots = pd.DataFrame(table_data)
 
 # Toplamlar için yeni bir satır ekleme
-df_shots.loc[4] = [
+df_shots.loc[len(df_shots)] = [
     '',
     player_xG_sum,
     player_xGOT_sum,
