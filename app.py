@@ -413,6 +413,7 @@ for j, column in enumerate(df_shots.columns):
     cell.get_text().set_fontsize(24)
 
 for i, row in enumerate(df_shots.itertuples(index=False)):
+    cell.get_text().set_fontsize(14)
     for j, value in enumerate(row):
         # Alt toplam satırı için kontrol
         if i == len(df_shots) - 1:
