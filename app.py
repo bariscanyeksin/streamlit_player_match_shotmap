@@ -296,7 +296,7 @@ ax.text(0.165, 1.07, player_name, transform=ax.transAxes, fontsize=16, fontprope
         verticalalignment='top', horizontalalignment='left', color='white', weight='bold')
 
 ax.text(0.165, 1.018, team_name, transform=ax.transAxes, fontsize=10, fontproperties=prop,
-        verticalalignment='top', horizontalalignment='left', color='white')
+        verticalalignment='top', horizontalalignment='left', color=primary_text_color)
 
 goal_color = '#f5cb36'
 attemptSaved_color = '#3066d9'
