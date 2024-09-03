@@ -400,6 +400,11 @@ for i, row in enumerate(df_shots.itertuples(index=False)):
                 edgecolor = to_rgba(primary_text_color, alpha=0.2)
                 text = value
                 cell.get_text().set_fontproperties(bold_prop)
+            if j == 2:  # Sadece xG ve xGOT sütunları
+                facecolor = to_rgba('lightgray', alpha=0.125)
+                edgecolor = to_rgba(primary_text_color, alpha=0.2)
+                text = value
+                cell.get_text().set_fontproperties(bold_prop)
             else:  # Diğer sütunlar için hücreyi boş bırak
                 facecolor = 'none'
                 edgecolor = 'none'
