@@ -412,7 +412,7 @@ for j, column in enumerate(df_shots.columns):
     cell.set_edgecolor(to_rgba(primary_text_color, alpha=0.2))
     cell.get_text().set_fontsize(24)
 
-for i, row in enumerate(df_shots.itertuples(index=False)):
+for i, row in enumerate(df_shots.itertuples(index=True)):
     for j, value in enumerate(row):
         # Alt toplam satırı için kontrol
         if i == len(df_shots) - 1:
