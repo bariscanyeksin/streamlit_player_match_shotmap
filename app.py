@@ -435,7 +435,6 @@ for i, row in enumerate(df_shots.itertuples(index=False)):
         # Hücreyi oluştur ve ayarları yap
         cell = table.add_cell(i + 1, j, width=column_width, height=row_height, text=text, loc='center')
         cell.get_text().set_fontproperties(font_prop)
-        cell.get_text().set_fontsize(14)
         cell.get_text().set_color(primary_text_color)
         cell.set_facecolor(facecolor)
         cell.set_edgecolor(edgecolor)
