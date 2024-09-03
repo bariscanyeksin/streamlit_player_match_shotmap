@@ -104,7 +104,7 @@ st.markdown(
 image_url = "https://images.fotmob.com/image_resources/logo/leaguelogo/71.png"  # Görselin URL'si
 
 # Görseli bir HTML div ile ortalama
-image_html = """
+image_html = f"""
     <div style="display: flex; justify-content: center;">
         <img src="{image_url}" width="100">
     </div>
