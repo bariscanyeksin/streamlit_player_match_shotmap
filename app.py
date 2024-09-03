@@ -73,22 +73,22 @@ st.markdown(
                 padding-right: 10px;
             }
         }
-        .row-widget.stDownloadButton {
+        .stDownloadButton {
             display: flex;
             justify-content: center;
             text-align: center;
         }
-        .row-widget.stDownloadButton button {
+        .stDownloadButton button {
             background-color: rgba(51, 51, 51, 0.17);
             color: gray;  /* Text color */
             border: 0.5px solid gray;  /* Thin gray border */
             transition: background-color 0.5s ease;
         }
-        .row-widget.stDownloadButton button:hover {
+        .stDownloadButton button:hover {
             background-color: rgba(51, 51, 51, 0.65);
             border: 1px solid gray;  /* Thin gray border */
         }
-        .row-widget.stDownloadButton button:active {
+        .stDownloadButton button:active {
             background-color: rgba(51, 51, 51, 0.17);
             color: gray;  /* Text color */
             border: 0.5px solid gray;  /* Thin gray border */
@@ -421,6 +421,21 @@ ax.add_table(table)
 ax.axis('off')
 # Görseli göster
 st.pyplot(fig)
+
+player_name_replaced = player_name.replace(" ", "_")
+match_name_replaced = f"{home_name}_{away_name}"
+    
+buf = io.BytesIO()
+plt.savefig(buf, format="png", dpi = 300, bbox_inches = "tight")
+buf.seek(0)
+file_name = f"{player_name_replaced}_{match_name_replaced}_Şut_Haritası.png"
+
+st.download_button(
+    label="Grafiği İndir",
+    data=buf,
+    file_name=file_name,
+    mime="image/png"
+)
 
 # Function to convert image to base64
 def img_to_base64(img_path):
