@@ -12,6 +12,7 @@ import pandas as pd
 from matplotlib.table import Table
 from datetime import datetime
 import base64
+import io
 
 st.set_page_config(
     page_title="Süper Lig - Oyuncu Maç Şut Haritası",
