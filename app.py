@@ -395,7 +395,7 @@ for i, row in enumerate(df_shots.itertuples(index=False)):
     for j, value in enumerate(row):
         # Alt toplam satırı için kontrol
         if i == len(df_shots) - 1:
-            if j == 1 or j == 2:  # Sadece xG ve xGOT sütunları
+            if j == 1:  # Sadece xG ve xGOT sütunları
                 facecolor = to_rgba('lightgray', alpha=0.125)
                 edgecolor = to_rgba(primary_text_color, alpha=0.2)
                 text = value
