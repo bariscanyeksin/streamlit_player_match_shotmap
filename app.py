@@ -390,28 +390,29 @@ for j, column in enumerate(df_shots.columns):
     cell.set_edgecolor(to_rgba(primary_text_color, alpha=0.2))
     cell.get_text().set_fontsize(24)
 
-# Tablo verilerini ekleme
 for i, row in enumerate(df_shots.itertuples(index=False)):
     for j, value in enumerate(row):
         # Alt toplam satırı için kontrol
         if i == len(df_shots) - 1:
             if j == 1 or j == 2:  # Sadece xG ve xGOT sütunları
+                font_prop = bold_prop
                 facecolor = to_rgba('lightgray', alpha=0.125)
                 edgecolor = to_rgba(primary_text_color, alpha=0.2)
                 text = value
-                cell.get_text().set_fontproperties(bold_prop)
             else:  # Diğer sütunlar için hücreyi boş bırak
+                font_prop = prop
                 facecolor = 'none'
                 edgecolor = 'none'
                 text = ''  # Toplam satırındaki diğer sütunları boş bırak
-                cell.get_text().set_fontproperties(prop)
         else:
+            font_prop = prop
             facecolor = to_rgba('lightgray', alpha=0)
             edgecolor = to_rgba(primary_text_color, alpha=0.2)
             text = value
         
+        # Hücreyi oluştur ve ayarları yap
         cell = table.add_cell(i + 1, j, width=column_width, height=row_height, text=text, loc='center')
-        cell.get_text().set_fontproperties(prop)
+        cell.get_text().set_fontproperties(font_prop)
         cell.get_text().set_color(primary_text_color)
         cell.set_facecolor(facecolor)
         cell.set_edgecolor(edgecolor)
