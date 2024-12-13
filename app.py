@@ -13,6 +13,9 @@ from matplotlib.table import Table
 from datetime import datetime
 import base64
 import io
+import json
+import hashlib
+from bs4 import BeautifulSoup
 
 st.set_page_config(
     page_title="Süper Lig - Oyuncu Maç Şut Haritası",
@@ -143,47 +146,71 @@ ax.axis('off')
 
 primary_text_color = '#818f86'
 
-def headers_league():
+def get_version_number():
     headers = {
-        'accept': '*/*',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
         'accept-language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
         'cache-control': 'no-cache',
         'pragma': 'no-cache',
-        'priority': 'u=1, i',
-        'referer': 'https://www.fotmob.com/en-GB/leagues/71/overview/super-lig',
+        'priority': 'u=0, i',
+        'referer': 'https://www.google.com/',
         'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
         'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'x-mas': 'eyJib2R5Ijp7InVybCI6Ii9hcGkvbGVhZ3Vlcz9pZD03MSZjY29kZTM9VFVSJm5ld1VlZmFCcmFja2V0PXRydWUiLCJjb2RlIjoxNzMzMjI3NTU2NTgzLCJmb28iOiI4OTA1MDIwZDcifSwic2lnbmF0dXJlIjoiNDZFNDc5MzNCRjZEQzY1NzExRDVCMUUzQzNDNkFFMTkifQ==',
     }
     
-    return headers
-
-def headers_team(team_id):
-    headers = {
-        'accept': '*/*',
-        'accept-language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
-        'cache-control': 'no-cache',
-        'pragma': 'no-cache',
-        'priority': 'u=1, i',
-        'referer': f'https://www.fotmob.com/en-GB/teams/{team_id}/',
-        'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'x-mas': 'eyJib2R5Ijp7InVybCI6Ii9hcGkvdGVhbXM/aWQ9MTAxODgmY2NvZGUzPVRVUiIsImNvZGUiOjE3MzMyMjc2NzcxMjYsImZvbyI6Ijg5MDUwMjBkNyJ9LCJzaWduYXR1cmUiOiJGQkRGMjNGQjgwREJFQ0YzNzE0MDlFOEMwODFFNkRDQiJ9',
-    }
+    response = requests.get("https://www.fotmob.com/", headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    version_element = soup.find('span', class_=lambda cls: cls and 'VersionNumber' in cls)
+    if version_element:
+        return version_element.text.strip()
+    else:
+        return None
     
-    return headers
+version_number = get_version_number()
 
-def headers_match_details(match_referer):
+def get_xmas_pass():
+    url = 'https://raw.githubusercontent.com/bariscanyeksin/streamlit_radar/refs/heads/main/xmas_pass.txt'
+    response = requests.get(url)
+    if response.status_code == 200:
+        file_content = response.text
+        return file_content
+    else:
+        print(f"Failed to fetch the file: {response.status_code}")
+        return None
+    
+xmas_pass = get_xmas_pass()
+
+def create_xmas_header(url, password):
+        try:
+            timestamp = int(datetime.now().timestamp() * 1000)
+            request_data = {
+                "url": url,
+                "code": timestamp,
+                "foo": version_number
+            }
+            
+            json_string = f"{json.dumps(request_data, separators=(',', ':'))}{password.strip()}"
+            signature = hashlib.md5(json_string.encode('utf-8')).hexdigest().upper()
+            body = {
+                "body": request_data,
+                "signature": signature
+            }
+            encoded = base64.b64encode(json.dumps(body, separators=(',', ':')).encode('utf-8')).decode('utf-8')
+            return encoded
+        except Exception as e:
+            return f"Error generating signature: {e}"
+
+def headers_matchDetails(match_id, match_referer):
+    api_url = "/api/matchDetails?matchId=" + str(match_id)
+    xmas_value = create_xmas_header(api_url, xmas_pass)
+    
     headers = {
         'accept': '*/*',
         'accept-language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -198,19 +225,22 @@ def headers_match_details(match_referer):
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'x-mas': 'eyJib2R5Ijp7InVybCI6Ii9hcGkvdGVhbXM/aWQ9MTAxODgmY2NvZGUzPVRVUiIsImNvZGUiOjE3MzMyMjc2NzcxMjYsImZvbyI6Ijg5MDUwMjBkNyJ9LCJzaWduYXR1cmUiOiJGQkRGMjNGQjgwREJFQ0YzNzE0MDlFOEMwODFFNkRDQiJ9',
+        'x-mas': f'{xmas_value}',
     }
     
     return headers
 
-def headers_player_data(player_id):
+def headers_leagues(league_id):
+    api_url = f"api/leagues?id={league_id}"
+    xmas_value = create_xmas_header(api_url, xmas_pass)
+    
     headers = {
         'accept': '*/*',
         'accept-language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
         'cache-control': 'no-cache',
         'pragma': 'no-cache',
         'priority': 'u=1, i',
-        'referer': f'https://www.fotmob.com/en-GB/players/{player_id}/',
+        'referer': f'https://www.fotmob.com/',
         'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Windows"',
@@ -218,15 +248,56 @@ def headers_player_data(player_id):
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'x-mas': 'eyJib2R5Ijp7InVybCI6Ii9hcGkvcGxheWVyRGF0YT9pZD0xMDkyMDE1IiwiY29kZSI6MTczMzIyNDA3NjgxOSwiZm9vIjoiNGJkMDI2ODk4In0sInNpZ25hdHVyZSI6IkFFMDUwMEY0NTY1MTU2OUUwQjJBNDlENjdGM0ZBQkI4In0=',
+        'x-mas': f'{xmas_value}',
     }
+    
+    return headers
+
+def headers_team_data(team_id, api_url):
+    xmas_value = create_xmas_header(api_url, xmas_pass)
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'cache-control': 'no-cache',
+        'pragma': 'no-cache',
+        'priority': 'u=1, i',
+        'referer': f'https://www.fotmob.com/en-GB/teams/{team_id}/',
+        'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'x-mas': f'{xmas_value}',
+    }
+    
+    return headers
+
+def headers_for_images():
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'cache-control': 'no-cache',
+        'pragma': 'no-cache',
+        'priority': 'u=1, i',
+        'referer': f'https://www.fotmob.com/',
+        'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+        }
     
     return headers
 
 # API'den maç verilerini çekmek için bir fonksiyon
 def fetch_finished_matches():
-    api_url = "https://www.fotmob.com/api/leagues?id=71&ccode3=TUR"
-    response = requests.get(api_url, headers=headers_league())
+    league_id = 71
+    api_url = f"https://www.fotmob.com/api/leagues?id={league_id}&ccode3=TUR"
+    response = requests.get(api_url, headers=headers_leagues(league_id))
     data = response.json()
     allmatches = data['matches']['allMatches']
     
@@ -279,7 +350,7 @@ match_details = next(match for match in matches_by_week[selected_week] if f"{mat
 match_id = match_details['id']
 match_referer = match_details['pageUrl'].split('#')[0]
 match_api_url = f"https://www.fotmob.com/api/matchDetails?matchId={match_id}"
-match_response = requests.get(match_api_url, headers=headers_match_details(match_referer))
+match_response = requests.get(match_api_url, headers=headers_matchDetails(match_id, match_referer))
 match_data = match_response.json()
 
 general_data = match_data['general']
@@ -342,13 +413,18 @@ player_xGOT_sum = player_detailed_stats.get('stats', [{}])[0].get('stats', {}).g
 
 # Oyuncu görselini URL'den çekme
 url = f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png'
-response = requests.get(url, headers=headers_player_data(player_id))
-img = mpimg.imread(BytesIO(response.content))
-
-# Görseli ekleme
-imagebox = OffsetImage(img, zoom=0.3)
-ab = AnnotationBbox(imagebox, (0.05, 1.1), frameon=False, xycoords='axes fraction', box_alignment=(0, 1))
-ax.add_artist(ab)
+response = requests.get(url, headers=headers_for_images())
+content_type = response.headers.get('Content-Type', '')
+if 'image/png' in content_type:
+    img = mpimg.imread(BytesIO(response.content))
+    
+    # Görseli ekleme
+    imagebox = OffsetImage(img, zoom=0.3)
+    ab = AnnotationBbox(imagebox, (0.05, 1.1), frameon=False, xycoords='axes fraction', box_alignment=(0, 1))
+    ax.add_artist(ab)
+else:
+    print(f"Geçersiz içerik türü: {content_type}")
+    print(response.text)  # Sunucunun döndürdüğü metni yazdır
 
 # Oyuncu görselini URL'den çekme
 #url_teamlogo = f'https://images.fotmob.com/image_resources/logo/teamlogo/{team_id}.png'
@@ -361,10 +437,11 @@ ax.add_artist(ab)
 #ax.add_artist(ab_teamlogo)
 
 def get_team_name(team_id):
-    api_url = f"https://www.fotmob.com/api/teams?id={team_id}"
-    response = requests.get(api_url, headers=headers_team(team_id))
-    data = response.json()
-    return data
+    api_url = f"/api/teams?id={team_id}"
+    team_data_url = f"https://www.fotmob.com"+api_url
+    team_data_response = requests.get(team_data_url, headers=headers_team_data(team_id, api_url))
+    team_data = team_data_response.json()
+    return team_data
 
 team_data = get_team_name(team_id)
 team_name = team_data["details"]["name"]
@@ -389,9 +466,9 @@ for shot in player_shots:
             pitch.scatter(shot['x'], shot['y'], ax=ax, c=shot_color, s=round(shot['expectedGoals'], 2)*800, edgecolors='black', marker='*', alpha=0.8, lw=0.5)
         if shot['eventType'] == 'AttemptSaved':
             shot_color = attemptSaved_color
-            if (shot['isBlocked'] == True) & (shot['expectedGoalsOnTarget'] == 0):
+            if (shot['isBlocked'] == True) & (shot['expectedGoalsOnTarget'] is not None and shot['expectedGoalsOnTarget'] == 0):
                 pitch.lines(shot['x'], shot['y'], shot['blockedX'], shot['blockedY'], ax=ax, color=to_rgba(shot_color, alpha=0.5), lw=1)
-            elif (shot['isBlocked'] == False) & (shot['expectedGoalsOnTarget'] > 0):
+            elif (shot['isBlocked'] == False) and (shot['expectedGoalsOnTarget'] is not None and shot['expectedGoalsOnTarget'] > 0):
                 pitch.lines(shot['x'], shot['y'], shot['blockedX'], shot['blockedY'], ax=ax, color=to_rgba(shot_color, alpha=0.5), lw=1)
             else:
                 pitch.lines(shot['x'], shot['y'], 105, shot['goalCrossedY'], ax=ax, color=to_rgba(shot_color, alpha=0.25), lw=1)
@@ -447,10 +524,10 @@ table_data = [
     {
         'Şut Dakikası': f"{shot['min']}'",
         'xG': '-' if shot.get('isOwnGoal', False) else round(shot['expectedGoals'], 2) if isinstance(shot['expectedGoals'], (float, int)) else None,
-        'xGOT': '-' if (shot.get('isOwnGoal', False)) or (shot['expectedGoalsOnTarget'] == 0) else round(shot['expectedGoalsOnTarget'], 2) if isinstance(shot['expectedGoalsOnTarget'], (float, int)) else None,
+        'xGOT': '-' if (shot.get('isOwnGoal', False)) or (shot['expectedGoalsOnTarget'] is not None and shot['expectedGoalsOnTarget'] == 0) else round(shot['expectedGoalsOnTarget'] is not None and shot['expectedGoalsOnTarget'], 2) if isinstance(shot['expectedGoalsOnTarget'], (float, int)) else None,
         'Hazırlanış': situation_translation.get(shot['situation'], shot['situation']),
         'Vuruş Tipi': shootType_translation.get(shot['shotType'], shot['shotType']),
-        'Sonuç': 'Kurtarış' if (shot['eventType'] == 'AttemptSaved' and shot['expectedGoalsOnTarget'] > 0) else 'Blok' if (shot['eventType'] == 'AttemptSaved' and shot['expectedGoalsOnTarget'] == 0) else result_translation.get(shot['eventType'], shot['eventType'])
+        'Sonuç': 'Kurtarış' if (shot['eventType'] == 'AttemptSaved' and shot['expectedGoalsOnTarget'] is not None and shot['expectedGoalsOnTarget'] > 0) else 'Blok' if (shot['eventType'] == 'AttemptSaved' and shot['expectedGoalsOnTarget'] is not None and shot['expectedGoalsOnTarget'] == 0) else result_translation.get(shot['eventType'], shot['eventType'])
     }
     for shot in player_shots
 ]
