@@ -279,7 +279,6 @@ def headers_for_images():
         'accept': '*/*',
         'accept-language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
         'cache-control': 'no-cache',
-        'pragma': 'no-cache',
         'priority': 'u=1, i',
         'referer': f'https://www.fotmob.com/',
         'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
@@ -293,7 +292,6 @@ def headers_for_images():
     
     return headers
 
-# API'den maç verilerini çekmek için bir fonksiyon
 def fetch_finished_matches():
     league_id = 71
     api_url = f"https://www.fotmob.com/api/leagues?id={league_id}&ccode3=TUR"
